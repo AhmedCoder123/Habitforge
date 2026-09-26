@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">HabitForge PKT</string>
+    <string name="tab_today">Today</string>
+    <string name="tab_analytics">30-Day Analytics</string>
+    <string name="tab_schedule">Schedule</string>
+    <string name="tab_notifications">Alerts &amp; Reset</string>
+    <string name="karachi_time_badge">Karachi Time (GMT+5)</string>
+    <string name="daily_reset_title">Daily Midnight Reset</string>
+    <string name="completion_rate">Adherence</string>
+    <string name="notification_permission_title">Allow Notifications</string>
+    <string name="notification_permission_desc">Enable habit reminders and the 12:00 AM Karachi reset warning.</string>
+</resources>

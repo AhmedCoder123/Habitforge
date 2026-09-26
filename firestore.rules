@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserHabitLog(data) {
+      return data.id is string && isValidId(data.id) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.habitId is string && data.habitId.size() > 0 && data.habitId.size() <= 64 &&
+             (!('habitTitle' in data) || (data.habitTitle is string && data.habitTitle.size() <= 100)) &&
+             data.dateKey is string && data.dateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+             data.isCompleted is bool &&
+             data.currentProgress is int && data.currentProgress >= 0 &&
+             data.targetProgress is int && data.targetProgress >= 0 &&
+             (!('karachiDate' in data) || (data.karachiDate is string && data.karachiDate.size() <= 50)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidUserDailySummary(data) {
+      return data.dateKey is string && data.dateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.totalScheduled is int && data.totalScheduled >= 0 &&
+             data.completedCount is int && data.completedCount >= 0 &&
+             (data.completionRate is number || data.completionRate is int) &&
+             data.completionRate >= 0 && data.completionRate <= 100 &&
+             (!('karachiTimezone' in data) || (data.karachiTimezone is string && data.karachiTimezone.size() <= 50)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // User Subcollections with strict ownership enforcement
+    match /users/{userId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+      // Habit Logs subcollection
+      match /habit_logs/{logId} {
+        allow get: if isSignedIn() && request.auth.uid == userId && isValidId(logId);
+        allow list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(logId) &&
+                         incoming().id == logId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['id', 'userId', 'habitId', 'dateKey', 'isCompleted', 'currentProgress', 'targetProgress', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['id', 'userId', 'habitId', 'habitTitle', 'dateKey', 'isCompleted', 'currentProgress', 'targetProgress', 'karachiDate', 'createdAt', 'updatedAt']) &&
+                         isValidUserHabitLog(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(logId) &&
+                         incoming().id == existing().id &&
+                         incoming().userId == existing().userId &&
+                         incoming().dateKey == existing().dateKey &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidUserHabitLog(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['isCompleted', 'currentProgress', 'targetProgress', 'habitTitle', 'karachiDate', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(logId);
+      }
+
+      // Daily Summaries subcollection
+      match /daily_summaries/{dateKey} {
+        allow get: if isSignedIn() && request.auth.uid == userId && isValidId(dateKey);
+        allow list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(dateKey) &&
+                         incoming().dateKey == dateKey &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['dateKey', 'userId', 'totalScheduled', 'completedCount', 'completionRate', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['dateKey', 'userId', 'totalScheduled', 'completedCount', 'completionRate', 'karachiTimezone', 'createdAt', 'updatedAt']) &&
+                         isValidUserDailySummary(incoming());
+
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         isValidId(dateKey) &&
+                         incoming().dateKey == existing().dateKey &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidUserDailySummary(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['totalScheduled', 'completedCount', 'completionRate', 'karachiTimezone', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(dateKey);
+      }
+    }
+  }
+}

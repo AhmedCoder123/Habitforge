@@ -1,0 +1,128 @@
+{
+  "entities": {
+    "UserHabitLog": {
+      "title": "UserHabitLog",
+      "description": "Log entry recording completion or progress of a habit on a specific date synced to Karachi GMT+5 time",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique log document ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID"
+        },
+        "habitId": {
+          "type": "string",
+          "description": "Identifier of the habit"
+        },
+        "habitTitle": {
+          "type": "string",
+          "description": "Display title of the habit"
+        },
+        "dateKey": {
+          "type": "string",
+          "description": "Karachi GMT+5 calendar date in YYYY-MM-DD format"
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "Whether the habit was completed"
+        },
+        "currentProgress": {
+          "type": "integer",
+          "description": "Current numeric progress value"
+        },
+        "targetProgress": {
+          "type": "integer",
+          "description": "Target numeric progress value"
+        },
+        "karachiDate": {
+          "type": "string",
+          "description": "Formatted date in Karachi GMT+5"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last updated server timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "habitId",
+        "dateKey",
+        "isCompleted",
+        "currentProgress",
+        "targetProgress",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserDailySummary": {
+      "title": "UserDailySummary",
+      "description": "Aggregated daily checklist progress record strictly aligned with Karachi GMT+5 calendar day",
+      "type": "object",
+      "properties": {
+        "dateKey": {
+          "type": "string",
+          "description": "Karachi GMT+5 calendar date key in YYYY-MM-DD format"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID"
+        },
+        "totalScheduled": {
+          "type": "integer",
+          "description": "Total habits scheduled for the Karachi date"
+        },
+        "completedCount": {
+          "type": "integer",
+          "description": "Total habits completed on that Karachi date"
+        },
+        "completionRate": {
+          "type": "number",
+          "description": "Adherence percentage (0-100)"
+        },
+        "karachiTimezone": {
+          "type": "string",
+          "description": "Explicit timezone identifier Asia/Karachi"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp"
+        }
+      },
+      "required": [
+        "dateKey",
+        "userId",
+        "totalScheduled",
+        "completedCount",
+        "completionRate",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/habit_logs/{logId}": {
+      "schema": "UserHabitLog",
+      "description": "Subcollection of habit completion records for the authenticated user"
+    },
+    "/users/{userId}/daily_summaries/{dateKey}": {
+      "schema": "UserDailySummary",
+      "description": "Subcollection of daily progress records keyed by Karachi GMT+5 calendar date"
+    }
+  }
+}

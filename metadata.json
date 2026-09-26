@@ -1,0 +1,6 @@
+{
+  "name": "HabitForge PKT",
+  "description": "Karachi GMT+5 daily reset habit tracker with predefined routines, custom recurring intervals, rolling 30-day analytics, and smart notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
